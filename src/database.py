@@ -141,18 +141,39 @@ def create_tables(connection):
 
 
 def clear_database(connection):
-    """
-    Clear generated data before a fresh pipeline run.
-    Source CSV files are never modified.
-    """
 
     cursor = connection.cursor()
 
+    # Delete source records first because they
+    # reference the master people table.
     cursor.execute("DELETE FROM naukri_applicants")
     cursor.execute("DELETE FROM gig_workers")
     cursor.execute("DELETE FROM cbnexus_contacts")
+
+    # Delete quality and review records.
     cursor.execute("DELETE FROM data_quality_issues")
     cursor.execute("DELETE FROM match_reviews")
+
+    # Delete master people.
     cursor.execute("DELETE FROM people")
+
+    # Reset SQLite AUTOINCREMENT counters.
+    #
+    # This ensures that every fresh pipeline run
+    # starts person IDs from 1 again instead of
+    # continuing from previous test runs.
+    cursor.execute(
+        """
+        DELETE FROM sqlite_sequence
+        WHERE name IN (
+            'people',
+            'naukri_applicants',
+            'gig_workers',
+            'cbnexus_contacts',
+            'data_quality_issues',
+            'match_reviews'
+        )
+        """
+    )
 
     connection.commit()
