@@ -4,3 +4,11 @@ __pycache__/
 .env
 consultbae.db
 .DS_Store
+
+# Audio recordings
+audio/submissions/*
+*.wav
+*.mp3
+*.m4a
+*.ogg
+*.web

@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ConsultBae — Audio Collection</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #1f2937;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .header h1 {
+            margin: 0 0 10px;
+            font-size: 30px;
+        }
+
+        .header p {
+            margin: 0;
+            color: #6b7280;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .audio-box {
+            margin-top: 20px;
+            padding: 25px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            text-align: center;
+            background: #f8fafc;
+        }
+
+        .audio-box p {
+            color: #64748b;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+        }
+
+        button {
+            border: none;
+            padding: 13px 22px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .record-btn {
+            background: #ef4444;
+            color: white;
+            margin: 8px;
+        }
+
+        .record-btn:hover {
+            background: #dc2626;
+        }
+
+        .stop-btn {
+            background: #64748b;
+            color: white;
+            margin: 8px;
+        }
+
+        .stop-btn:hover {
+            background: #475569;
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 25px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+        }
+
+        .submit-btn:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #recordingStatus {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #ef4444;
+        }
+
+        #message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .success {
+            display: block !important;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            display: block !important;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .submission {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 22px;
+            margin-top: 18px;
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .submission-header h3 {
+            margin: 0;
+        }
+
+        .submission-id {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .phone {
+            color: #475569;
+            margin-bottom: 20px;
+        }
+
+        .properties {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .property {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .property-label {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .property-value {
+            font-weight: bold;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .no-audio {
+            color: #64748b;
+            margin-top: 15px;
+        }
+
+        .loading {
+            color: #64748b;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                width: 95%;
+                margin: 20px auto;
+            }
+
+            .properties {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>ConsultBae — Audio Collection</h1>
+        <p>
+            Submit an audio recording and automatically extract its technical properties.
+        </p>
+    </div>
+
+
+    <!-- SUBMIT AUDIO -->
+    <div class="card">
+
+        <h2>Submit Audio</h2>
+
+        <form id="audioForm">
+
+            <label for="name">Name</label>
+            <input
+                type="text"
+                id="name"
+                placeholder="Enter your name"
+                required
+            >
+
+            <label for="phone">Phone Number</label>
+            <input
+                type="tel"
+                id="phone"
+                placeholder="Enter your phone number"
+                required
+            >
+
+            <div class="audio-box">
+
+                <p>
+                    Upload a WAV audio file or record directly in your browser.
+                    Browser recordings are converted to WAV before upload.
+                </p>
+
+                <input
+                    type="file"
+                    id="audioFile"
+                    accept=".wav,audio/wav"
+                >
+
+                <br>
+
+                <button
+                    type="button"
+                    class="record-btn"
+                    id="startRecording"
+                >
+                    🎙 Start Recording
+                </button>
+
+                <button
+                    type="button"
+                    class="stop-btn"
+                    id="stopRecording"
+                    disabled
+                >
+                    ■ Stop Recording
+                </button>
+
+                <div id="recordingStatus"></div>
+
+                <audio
+                    id="preview"
+                    controls
+                    style="display:none;"
+                ></audio>
+
+            </div>
+
+            <button
+                type="submit"
+                class="submit-btn"
+            >
+                Submit Audio
+            </button>
+
+        </form>
+
+        <div id="message"></div>
+
+    </div>
+
+
+    <!-- SUBMISSIONS -->
+    <div class="card">
+
+        <h2>Audio Submissions</h2>
+
+        <div id="submissions">
+            <p class="loading">Loading submissions...</p>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    // ----------------------------------------------------
+    // CONFIGURATION
+    // ----------------------------------------------------
+
+    const API_BASE = "http://127.0.0.1:8000";
+
+
+    // ----------------------------------------------------
+    // ELEMENTS
+    // ----------------------------------------------------
+
+    const form = document.getElementById("audioForm");
+
+    const nameInput = document.getElementById("name");
+
+    const phoneInput = document.getElementById("phone");
+
+    const audioFileInput = document.getElementById("audioFile");
+
+    const startButton = document.getElementById("startRecording");
+
+    const stopButton = document.getElementById("stopRecording");
+
+    const recordingStatus =
+        document.getElementById("recordingStatus");
+
+    const preview =
+        document.getElementById("preview");
+
+    const message =
+        document.getElementById("message");
+
+    const submissions =
+        document.getElementById("submissions");
+
+
+    // ----------------------------------------------------
+    // RECORDING VARIABLES
+    // ----------------------------------------------------
+
+    let mediaRecorder = null;
+
+    let audioChunks = [];
+
+    let recordedBlob = null;
+    let microphoneStream = null;
+
+
+    // ----------------------------------------------------
+    // START RECORDING
+    // ----------------------------------------------------
+
+    startButton.addEventListener("click", async () => {
+
+        try {
+
+            microphoneStream =
+                await navigator.mediaDevices.getUserMedia({
+                    audio: true
+                });
+
+            audioChunks = [];
+
+            let options = {};
+
+            if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+                options.mimeType = "audio/webm;codecs=opus";
+            }
+
+            mediaRecorder =
+                new MediaRecorder(
+                    microphoneStream,
+                    options
+                );
+
+            mediaRecorder.ondataavailable = (event) => {
+
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+
+            };
+
+            mediaRecorder.onstop = async () => {
+
+                try {
+
+                    recordingStatus.textContent =
+                        "Converting recording to WAV...";
+
+                    const webmBlob =
+                        new Blob(audioChunks, {
+                            type: mediaRecorder.mimeType || "audio/webm"
+                        });
+
+                    recordedBlob =
+                        await convertToWav(webmBlob);
+
+                    const audioURL =
+                        URL.createObjectURL(recordedBlob);
+
+                    preview.src = audioURL;
+                    preview.style.display = "block";
+
+                    recordingStatus.textContent =
+                        "Recording ready. WAV file created.";
+
+                } catch (error) {
+
+                    console.error("WAV conversion error:", error);
+
+                    recordedBlob = null;
+
+                    recordingStatus.textContent = "";
+
+                    showMessage(
+                        "Could not convert the recording to WAV. Please try recording again.",
+                        false
+                    );
+
+                }
+
+                if (microphoneStream) {
+
+                    microphoneStream
+                        .getTracks()
+                        .forEach(track => track.stop());
+
+                    microphoneStream = null;
+
+                }
+
+            };
+
+            mediaRecorder.start();
+
+            startButton.disabled = true;
+            stopButton.disabled = false;
+
+            recordingStatus.textContent =
+                "🔴 Recording...";
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                "Could not access microphone. Please allow microphone permission.",
+                false
+            );
+
+        }
+
+    });
+
+
+    // Convert the browser's WebM recording into a real PCM WAV file.
+    async function convertToWav(blob) {
+
+        const arrayBuffer =
+            await blob.arrayBuffer();
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContext) {
+            throw new Error("Web Audio API is not supported.");
+        }
+
+        const audioContext =
+            new AudioContext();
+
+        try {
+
+            const audioBuffer =
+                await audioContext.decodeAudioData(arrayBuffer);
+
+            return audioBufferToWav(audioBuffer);
+
+        } finally {
+
+            await audioContext.close();
+
+        }
+
+    }
+
+
+    function audioBufferToWav(audioBuffer) {
+
+        const numberOfChannels =
+            audioBuffer.numberOfChannels;
+
+        const sampleRate =
+            audioBuffer.sampleRate;
+
+        const bitDepth = 16;
+
+        const bytesPerSample =
+            bitDepth / 8;
+
+        const blockAlign =
+            numberOfChannels * bytesPerSample;
+
+        const sampleCount =
+            audioBuffer.length;
+
+        const dataSize =
+            sampleCount * blockAlign;
+
+        const buffer =
+            new ArrayBuffer(44 + dataSize);
+
+        const view =
+            new DataView(buffer);
+
+
+        writeWavString(view, 0, "RIFF");
+
+        view.setUint32(
+            4,
+            36 + dataSize,
+            true
+        );
+
+        writeWavString(view, 8, "WAVE");
+
+
+        writeWavString(view, 12, "fmt ");
+
+        view.setUint32(
+            16,
+            16,
+            true
+        );
+
+        view.setUint16(
+            20,
+            1,
+            true
+        );
+
+        view.setUint16(
+            22,
+            numberOfChannels,
+            true
+        );
+
+        view.setUint32(
+            24,
+            sampleRate,
+            true
+        );
+
+        view.setUint32(
+            28,
+            sampleRate * blockAlign,
+            true
+        );
+
+        view.setUint16(
+            32,
+            blockAlign,
+            true
+        );
+
+        view.setUint16(
+            34,
+            bitDepth,
+            true
+        );
+
+
+        writeWavString(view, 36, "data");
+
+        view.setUint32(
+            40,
+            dataSize,
+            true
+        );
+
+
+        const channels = [];
+
+        for (
+            let channel = 0;
+            channel < numberOfChannels;
+            channel++
+        ) {
+
+            channels.push(
+                audioBuffer.getChannelData(channel)
+            );
+
+        }
+
+
+        let offset = 44;
+
+        for (
+            let sample = 0;
+            sample < sampleCount;
+            sample++
+        ) {
+
+            for (
+                let channel = 0;
+                channel < numberOfChannels;
+                channel++
+            ) {
+
+                let value =
+                    channels[channel][sample];
+
+                value =
+                    Math.max(
+                        -1,
+                        Math.min(1, value)
+                    );
+
+                const pcm =
+                    value < 0
+                        ? value * 0x8000
+                        : value * 0x7FFF;
+
+                view.setInt16(
+                    offset,
+                    pcm,
+                    true
+                );
+
+                offset += 2;
+
+            }
+
+        }
+
+
+        return new Blob(
+            [buffer],
+            {
+                type: "audio/wav"
+            }
+        );
+
+    }
+
+
+    function writeWavString(view, offset, value) {
+
+        for (
+            let i = 0;
+            i < value.length;
+            i++
+        ) {
+
+            view.setUint8(
+                offset + i,
+                value.charCodeAt(i)
+            );
+
+        }
+
+    }
+
+
+    // ----------------------------------------------------
+    // STOP RECORDING
+    // ----------------------------------------------------
+
+    stopButton.addEventListener("click", () => {
+
+        if (
+            mediaRecorder &&
+            mediaRecorder.state !== "inactive"
+        ) {
+
+            mediaRecorder.stop();
+
+        }
+
+        startButton.disabled = false;
+        stopButton.disabled = true;
+
+    });
+
+
+    // ----------------------------------------------------
+    // FILE SELECTION
+    // ----------------------------------------------------
+
+    audioFileInput.addEventListener("change", () => {
+
+        if (audioFileInput.files.length === 0) {
+            return;
+        }
+
+        const file =
+            audioFileInput.files[0];
+
+        if (!file.name.toLowerCase().endsWith(".wav")) {
+
+            audioFileInput.value = "";
+
+            recordedBlob = null;
+
+            preview.src = "";
+            preview.style.display = "none";
+
+            showMessage(
+                "Please select a WAV file. The FastAPI backend currently accepts WAV only.",
+                false
+            );
+
+            return;
+        }
+
+        recordedBlob = null;
+
+        const audioURL =
+            URL.createObjectURL(file);
+
+        preview.src = audioURL;
+        preview.style.display = "block";
+
+        recordingStatus.textContent =
+            "WAV audio file selected.";
+
+    });
+
+
+    // ----------------------------------------------------
+    // SUBMIT AUDIO
+    // ----------------------------------------------------
+
+    form.addEventListener("submit", async (event) => {
+
+        event.preventDefault();
+
+        const name =
+            nameInput.value.trim();
+
+        const phone =
+            phoneInput.value.trim();
+
+
+        if (!name || !phone) {
+
+            showMessage(
+                "Please enter your name and phone number.",
+                false
+            );
+
+            return;
+        }
+
+
+        let audioFile = null;
+
+
+        // If user selected a file
+        if (audioFileInput.files.length > 0) {
+
+            audioFile =
+                audioFileInput.files[0];
+
+        }
+
+        // Otherwise use recorded audio
+        else if (recordedBlob) {
+
+            audioFile =
+                new File(
+                    [recordedBlob],
+                    "recording.wav",
+                    {
+                        type: "audio/wav"
+                    }
+                );
+
+        }
+
+
+        if (!audioFile) {
+
+            showMessage(
+                "Please upload a WAV file or record your voice.",
+                false
+            );
+
+            return;
+        }
+
+
+        // Backend currently requires WAV
+        if (!audioFile.name.toLowerCase().endsWith(".wav")) {
+
+            showMessage(
+                "Please upload a WAV file. Your FastAPI backend currently accepts WAV audio only.",
+                false
+            );
+
+            return;
+        }
+
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "name",
+            name
+        );
+
+        formData.append(
+            "phone",
+            phone
+        );
+
+        formData.append(
+            "audio",
+            audioFile
+        );
+
+
+        try {
+
+            showMessage(
+                "Uploading audio...",
+                true
+            );
+
+
+            const response =
+                await fetch(
+                    `${API_BASE}/api/audio/upload`,
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.detail ||
+                    "Upload failed."
+                );
+
+            }
+
+
+            showMessage(
+                "Audio submitted successfully! Submission ID: " +
+                data.submission_id,
+                true
+            );
+
+
+            // Reset form
+            form.reset();
+
+            recordedBlob = null;
+
+            preview.style.display = "none";
+
+            recordingStatus.textContent = "";
+
+
+            // Reload submissions
+            await loadSubmissions();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                error.message ||
+                "Something went wrong while uploading.",
+                false
+            );
+
+        }
+
+    });
+
+
+    // ----------------------------------------------------
+    // LOAD SUBMISSIONS
+    // ----------------------------------------------------
+
+    async function loadSubmissions() {
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_BASE}/api/audio/submissions`
+                );
+
+
+            if (!response.ok) {
+                throw new Error(
+                    "Could not load submissions."
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            submissions.innerHTML = "";
+
+
+            if (!data || data.length === 0) {
+
+                submissions.innerHTML =
+                    "<p>No submissions yet.</p>";
+
+                return;
+            }
+
+
+            data.forEach(submission => {
+
+                const card =
+                    document.createElement("div");
+
+                card.className =
+                    "submission";
+
+
+                // ------------------------------------------------
+                // AUDIO PLAYER
+                // ------------------------------------------------
+
+                let audioHtml =
+                    `<p class="no-audio">
+                        No audio file available.
+                    </p>`;
+
+
+                if (submission.audio_url || submission.audio_filename) {
+
+                    const audioUrl = submission.audio_url
+    ? `${API_BASE}${submission.audio_url}`
+    : `${API_BASE}/api/audio/file/${encodeURIComponent(
+        submission.audio_filename
+    )}`;
+                   audioHtml = `
+    <audio controls>
+        <source
+            src="${audioUrl}"
+            type="audio/wav"
+        >
+        Your browser does not support audio playback.
+    </audio>
+`;
+                }
+
+
+                // ------------------------------------------------
+                // CARD HTML
+                // ------------------------------------------------
+
+                card.innerHTML = `
+
+                    <div class="submission-header">
+
+                        <h3>
+                            ${escapeHtml(
+                                submission.name || "Unknown"
+                            )}
+                        </h3>
+
+                        <span class="submission-id">
+                            ID: ${submission.id ?? "-"}
+                        </span>
+
+                    </div>
+
+
+                    <div class="phone">
+                        📱 ${escapeHtml(
+                            submission.phone || "-"
+                        )}
+                    </div>
+
+
+                    <div class="properties">
+
+                        <div class="property">
+
+                            <span class="property-label">
+                                Duration
+                            </span>
+
+                            <span class="property-value">
+                                ${
+                                    submission.duration_seconds != null
+                                    ? Number(
+                                        submission.duration_seconds
+                                      ).toFixed(3) + " sec"
+                                    : "-"
+                                }
+                            </span>
+
+                        </div>
+
+
+                        <div class="property">
+
+                            <span class="property-label">
+                                Sample Rate
+                            </span>
+
+                            <span class="property-value">
+                                ${
+                                    submission.sample_rate_khz != null
+                                    ? submission.sample_rate_khz + " kHz"
+                                    : "-"
+                                }
+                            </span>
+
+                        </div>
+
+
+                        <div class="property">
+
+                            <span class="property-label">
+                                Bitrate
+                            </span>
+
+                            <span class="property-value">
+                                ${
+                                    submission.bitrate_kbps != null
+                                    ? Number(
+                                        submission.bitrate_kbps
+                                      ).toFixed(1) + " kbps"
+                                    : "-"
+                                }
+                            </span>
+
+                        </div>
+
+
+                        <div class="property">
+
+                            <span class="property-label">
+                                Loudness
+                            </span>
+
+                            <span class="property-value">
+                                ${
+                                    submission.loudness_db != null
+                                    ? Number(
+                                        submission.loudness_db
+                                      ).toFixed(2) + " dB"
+                                    : "-"
+                                }
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    ${audioHtml}
+
+                `;
+
+
+                submissions.appendChild(card);
+
+            });
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            submissions.innerHTML = `
+                <p class="error">
+                    Could not load submissions.
+                    Make sure the FastAPI server is running.
+                </p>
+            `;
+
+        }
+
+    }
+
+
+    // ----------------------------------------------------
+    // MESSAGE
+    // ----------------------------------------------------
+
+    function showMessage(text, success) {
+
+        message.textContent = text;
+
+        message.className =
+            success ? "success" : "error";
+
+    }
+
+
+    // ----------------------------------------------------
+    // HTML ESCAPING
+    // ----------------------------------------------------
+
+    function escapeHtml(value) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent = value;
+
+        return div.innerHTML;
+
+    }
+
+
+    // ----------------------------------------------------
+    // LOAD DATA WHEN PAGE OPENS
+    // ----------------------------------------------------
+
+    loadSubmissions();
+
+</script>
+
+</body>
+</html>
