@@ -1,0 +1,222 @@
+{
+  "name": "ConsultBae-AI Skill Categorization",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b90217c6-70cb-456f-8238-7ac688bfea25",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:8000/api/people",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "55aed60d-4b00-4bc1-9781-917bfcfb1397",
+      "name": "Get People"
+    },
+    {
+      "parameters": {
+        "jsCode": "const people = $input.first().json.people;\n\nreturn people.map(person => ({\n  json: person\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "d6712475-e4b0-4d3f-bcae-97648ce15f31",
+      "name": "Split People"
+    },
+    {
+      "parameters": {
+        "jsCode": "const people = $input.all().map(item => ({\n  person_id: item.json.person_id,\n  skills: item.json.skills\n}));\n\nreturn [\n  {\n    json: {\n      people\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "9716f2eb-6f2a-4bd1-ad9d-d7a23d850b89",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the original people from Code in JavaScript\nconst people = $('Code in JavaScript').first().json.people;\n\n// Classify skills deterministically\nfunction categorize(skills) {\n  const s = skills.map(x => String(x).toLowerCase());\n\n  const automation = [\n    'n8n',\n    'zapier',\n    'selenium',\n    'web scraping',\n    'langchain',\n    'workflow automation'\n  ];\n\n  const data = [\n    'sql',\n    'mysql',\n    'mongodb',\n    'pandas',\n    'numpy',\n    'data analysis',\n    'machine learning'\n  ];\n\n  const web = [\n    'react',\n    'javascript',\n    'html',\n    'css',\n    'fastapi',\n    'rest api',\n    'rest apis',\n    'docker'\n  ];\n\n  // Automation gets priority\n  if (s.some(skill => automation.some(x => skill.includes(x)))) {\n    return 'automation-heavy';\n  }\n\n  if (s.some(skill => data.some(x => skill.includes(x)))) {\n    return 'data';\n  }\n\n  if (s.some(skill => web.some(x => skill.includes(x)))) {\n    return 'web dev';\n  }\n\n  return 'web dev';\n}\n\n// Return all people with their category\nreturn people.map(person => ({\n  json: {\n    ...person,\n    skill_category: categorize(person.skills || [])\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        0
+      ],
+      "id": "1cb2ff9e-9155-4e90-91d9-c9c9ea9bc2cb",
+      "name": "JavaScript Categorization"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://127.0.0.1:8000/api/people/{{$json.person_id}}/category",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "category",
+              "value": "={{$json.skill_category}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1504,
+        0
+      ],
+      "id": "a3b97a1d-f2da-4157-a0f5-def7c2deb939",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a skill categorization assistant.\n\nFor every person in the input, classify their skills into exactly ONE category:\n\n- web dev\n- data\n- automation-heavy\n\nRules:\n- web dev: React, JavaScript, HTML/CSS, FastAPI, REST APIs, Docker, frontend/backend web development\n- data: SQL, MySQL, MongoDB, Pandas, NumPy, data analysis, machine learning\n- automation-heavy: n8n, Zapier, Selenium, Web Scraping, LangChain, workflow automation\n\nFor each person, return their person_id and category.\n\nReturn ONLY valid JSON in this exact format:\n[\n  {\"person_id\": 1, \"skill_category\": \"web dev\"},\n  {\"person_id\": 2, \"skill_category\": \"data\"}\n]\n\nNo explanations. No markdown. No <think> tags.\n\nInput:\n{{ JSON.stringify($json.people) }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        896,
+        0
+      ],
+      "id": "0b72c774-1ce6-4d92-8311-353ee7e122b5",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.6-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        784,
+        208
+      ],
+      "id": "c68e364a-1582-43cb-bdb6-529035b618ab",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "0mZRPTcU4JcMwOuy",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get People",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get People": {
+      "main": [
+        [
+          {
+            "node": "Split People",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split People": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JavaScript Categorization": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "JavaScript Categorization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2477d65a-5e11-4491-9bf9-603b84b7b4ee",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "368f33b7b13c14a1bf990dcaf78c4e7fd1dcaec4f86c8a8b946471b473d3df13"
+  },
+  "nodeGroups": [],
+  "id": "PqGHOl1ElbjnIp0O",
+  "tags": []
+}
